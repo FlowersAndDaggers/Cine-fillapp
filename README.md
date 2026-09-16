@@ -1,4 +1,4 @@
-TP Integrador de estructura de datos: cine_fillap
+TP Integrador de estructura de datos: Cine-fillap
 
 integrantes:
 
