@@ -16,11 +16,11 @@ FECHA 23/09
 
 TABLA DE RESULTADOS: 
   
-  CANTIDAD DE DATOS     TIEMPO EN SECUENCIAL    TIEMPO EN ARBOL BINARIO
-
-| N = 1000           | Secuencial:  0.1300 ms |  Árbol:  0.0084 ms      |
-| N = 10000          | Secuencial:  1.1395 ms |  Árbol:  0.0051 ms      |
-| N = 85855          | Secuencial: 10.7731 ms |  Árbol:  0.0060 ms      |
+ | Cantidad de Datos | Tiempo en Secuencial | Tiempo en Árbol Binario |
+| :--- | :--- | :--- |
+| N = 1000 | Secuencial: 0.1300 ms | Árbol: 0.0084 ms |
+| N = 10000 | Secuencial: 1.1395 ms | Árbol: 0.0051 ms |
+| N = 85855 | Secuencial: 10.7731 ms | Árbol: 0.0060 ms |
 
 *Usamos como 85.855 cantidad de datos como máximo porque la base de datos que conseguimos tiene esa cantidad de peliculas. 
 
