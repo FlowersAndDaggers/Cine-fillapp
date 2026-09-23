@@ -15,7 +15,9 @@ ENTREGA DE TRABAJO INTEGRADOR 02 COMPLEJIDAD
 FECHA 23/09
 
 TABLA DE RESULTADOS: 
+  
   CANTIDAD DE DATOS     TIEMPO EN SECUENCIAL    TIEMPO EN ARBOL BINARIO
+
 | N = 1000           | Secuencial:  0.1300 ms |  Árbol:  0.0084 ms      |
 | N = 10000          | Secuencial:  1.1395 ms |  Árbol:  0.0051 ms      |
 | N = 85855          | Secuencial: 10.7731 ms |  Árbol:  0.0060 ms      |
