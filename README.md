@@ -1,6 +1,6 @@
 TP Integrador de estructura de datos: Cine-fillap
 
-integrantes:
+integrantes del grupo 29:
 
 Hidalgo, Diego
 D.N.I.: 38.526.547
