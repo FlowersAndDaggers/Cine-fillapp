@@ -43,6 +43,62 @@ with open('catalogo.csv', encoding='utf-8') as archivo:
             nueva_prod = Produccion(fila[0], fila[1], fila[2], fila[3], fila[4], fila[5], fila[6], fila[7])
             mi_catalogo.append(nueva_prod)
 
+class Nodo:
+    def __init__(self, pelicula):
+        self.pelicula = pelicula
+        self.izquierda = None
+        self.derecha = None
+
+class ArbolCatalogo:
+    def __init__(self):
+        self.raiz = None
+
+    def insertar(self, pelicula):
+        if self.raiz is None:
+            self.raiz = Nodo(pelicula)
+        else:
+            self._insertar_recursivo(self.raiz, pelicula)
+
+    def _insertar_recursivo(self, nodo_actual, nueva_pelicula):
+        if nueva_pelicula.get_titulo().lower() < nodo_actual.pelicula.get_titulo().lower():
+            if nodo_actual.izquierda is None:
+                nodo_actual.izquierda = Nodo(nueva_pelicula)
+            else:
+                self._insertar_recursivo(nodo_actual.izquierda, nueva_pelicula)
+        else:
+            if nodo_actual.derecha is None:
+                nodo_actual.derecha = Nodo(nueva_pelicula)
+            else:
+                self._insertar_recursivo(nodo_actual.derecha, nueva_pelicula)
+
+    # --- RECORRIDOS OBLIGATORIOS tp3 (solo usamos inorder) ---
+    def recorrido_inorder(self):
+        self._inorder_recursivo(self.raiz)
+
+    def _inorder_recursivo(self, nodo):
+        if nodo is not None:
+            self._inorder_recursivo(nodo.izquierda)
+            print(nodo.pelicula)
+            self._inorder_recursivo(nodo.derecha)
+
+    def recorrido_preorder(self):
+        self._preorder_recursivo(self.raiz)
+
+    def _preorder_recursivo(self, nodo):
+        if nodo is not None:
+            print(nodo.pelicula.get_titulo())
+            self._preorder_recursivo(nodo.izquierda)
+            self._preorder_recursivo(nodo.derecha)
+
+    def recorrido_postorder(self):
+        self._postorder_recursivo(self.raiz)
+
+    def _postorder_recursivo(self, nodo):
+        if nodo is not None:
+            self._postorder_recursivo(nodo.izquierda)
+            self._postorder_recursivo(nodo.derecha)
+            print(nodo.pelicula.get_titulo())
+
 
 #buscamos peliculas en el catalogo
 #ACÁ ESTA LA ESTRATEGIA DE BUSQUEDA SECUENCIAL
@@ -104,101 +160,69 @@ def filtrar_peli(catalogo, termino):
     else:
         print(f"\n No se encontraron coincidencias para '{termino}'.")
 
-#Y ACA LA ESTRATEGIA DE BUSQUEDA DE ARBOL BINARIO
-class Nodo:
-    def __init__(self, pelicula):
-        self.pelicula = pelicula
-        self.izquierda = None
-        self.derecha = None
-
-class ArbolCatalogo:
-    def __init__(self):
-        self.raiz = None
-
-    def insertar(self, pelicula):
-        if self.raiz is None:
-            self.raiz = Nodo(pelicula)
-        else:
-            self._insertar_recursivo(self.raiz, pelicula)
-
-    def _insertar_recursivo(self, nodo_actual, nueva_pelicula):
-        if nueva_pelicula.get_titulo().lower() < nodo_actual.pelicula.get_titulo().lower():
-            if nodo_actual.izquierda is None:
-                nodo_actual.izquierda = Nodo(nueva_pelicula)
-            else:
-                self._insertar_recursivo(nodo_actual.izquierda, nueva_pelicula)
-        else:
-            if nodo_actual.derecha is None:
-                nodo_actual.derecha = Nodo(nueva_pelicula)
-            else:
-                self._insertar_recursivo(nodo_actual.derecha, nueva_pelicula)
-
-    def buscar(self, titulo_buscado):
-        return self._buscar_recursivo(self.raiz, titulo_buscado.lower())
-
-    def _buscar_recursivo(self, nodo_actual, titulo):
-        if nodo_actual is None:
-            return None
-        titulo_nodo = nodo_actual.pelicula.get_titulo().lower()
-        if titulo == titulo_nodo:
-            return nodo_actual.pelicula
-        elif titulo < titulo_nodo:
-            return self._buscar_recursivo(nodo_actual.izquierda, titulo)
-        else:
-            return self._buscar_recursivo(nodo_actual.derecha, titulo)
         
-    #iniciamos el menu con las opciones
+# ==========================================
+# NUEVA FUNCIÓN DE RECOMENDACIÓN todavía no esta terminada
+# ==========================================
+def recomendar_peli(catalogo):
+    print("\n--- RECOMENDACIÓN DE PELÍCULAS ---")
+    termino = input("¿En qué película basamos tu recomendación?: ")
+    
+    # 1. Buscar coincidencias parciales (similar a buscar_peli)
+    encontrados = [p for p in catalogo if termino.lower() in p.get_titulo().lower()]
+    
+    if encontrados:
+        print(f"\nEncontramos estas películas para '{termino}':")
+        for i, peli in enumerate(encontrados, start=1):
+            print(f"{i}. {peli.get_titulo()} ({peli.get_fecha_estreno()[:4]})")
+        
+        # Acá luego agregaremos la lógica para que el usuario elija un número 
+        # y el algoritmo busque películas similares.
+        print("\n[Lógica de recomendación todavia en proceso]")
+    else:
+        print("\n❌ No se encontraron películas con ese título para basar la recomendación.")
+
+
 def iniciar_menu(catalogo):
     while True:
         print("\n====================")
-        print("   CINE-FILLAPP 🎬  ")
+        print("    CINEFILAPP 🎬   ")
         print("====================")
-        print("1. Listar todo el catálogo")
-        print("2. Buscar película por título")
-        print("3. Filtrar")
-        print("4. Salir")
+        print("¿Todavía no decidiste qué mirar? Te ayudamos.\n")
+        print("1. Recomendación por película")
+        print("2. Listar todo el catálogo")
+        print("3. Buscar película por título")
+        print("4. Filtrar")
+        print("5. Salir")
         
-        opcion = input("\nElegí una opción (1-4): ")
+        opcion = input("\nElegí una opción (1-5): ")
         
         if opcion == "1":
-            print("\n--- LISTADO COMPLETO ---")
-            for peli in catalogo:
-                print(peli)
+            recomendar_peli(catalogo)
+            
         elif opcion == "2":
-            termino = input("Ingresá el título a buscar: ")
+            print("\n--- CATÁLOGO COMPLETO (A-Z) ---")
+            print("Listando peliculas... por favor espere.")
+            arbol_catalogo = ArbolCatalogo()
+            for peli in catalogo:
+                arbol_catalogo.insertar(peli)
+            arbol_catalogo.recorrido_inorder()
+            print("-------------------------------")
             
-            print("\n--- ESTRATEGIA DE BÚSQUEDA ---")
-            print("1. Búsqueda Secuencial O(N)")
-            print("2. Búsqueda en Árbol Binario O(log N)")
-            estrategia = input("Elegí el método (1-2): ")
-            
-            if estrategia == "1":
-                buscar_peli(catalogo, termino)
-                
-            elif estrategia == "2":
-                arbol = ArbolCatalogo()
-                for p in catalogo:
-                    arbol.insertar(p)
-                    
-                resultado = arbol.buscar(termino)
-                if resultado:
-                    print(f"\n--- Resultados para '{termino}' ---")
-                    print(resultado)
-                else:
-                    print(f"\n❌ No se encontró '{termino}' en el árbol.")
-            else:
-                print("\n❌ Opción no válida.")
         elif opcion == "3":
-            termino = input("Ingresá tipo, género, director, actores,año o calificación:")
-            filtrar_peli(catalogo, termino)
+            termino = input("Ingresá el título a buscar: ")
+            buscar_peli(catalogo, termino)
+            
         elif opcion == "4":
-            print("\n¡Gracias por usar Cine-fillapp! Saliendo...")
+            termino = input("Ingresá tipo, género, director, actores, año o calificación: ")
+            filtrar_peli(catalogo, termino)
+            
+        elif opcion == "5":
+            print("\n¡Gracias por usar CinefilApp! Saliendo...")
             break
 
         else:
-            print("\n Opción no válida. Ingresá 1, 2, 3 o 4.")
-
+            print("\n❌ Opción no válida. Ingresá un número del 1 al 5.")
 #Iniciamos el menu
 if __name__ == "__main__":
     iniciar_menu(mi_catalogo)
-
