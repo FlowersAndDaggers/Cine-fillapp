@@ -1,19 +1,27 @@
 #importamos el archivo csv
 import csv
+import sys
+import math
+import time
 
 #creamos la clase produccion
 class Produccion:
     def __init__ (self, id_prod, titulo, tipo, genero, fecha_estreno, puntaje, director, actores):
 
-#ponemos todos los datos en privado 
+        #ponemos todos los datos en privado 
         self._id = id_prod
         self._titulo = titulo
         self._tipo = tipo
-        self._genero = genero
+        
+     
+        self._genero = [g.strip().lower() for g in genero.split(',')]
+        
         self._fecha_estreno = fecha_estreno
         self._puntaje = puntaje
-        self._director = director
-        self._actores = actores
+        self._director = director.strip().lower() # Lo pasamos a minúscula para comparar más fácil
+        
+       
+        self._actores = [a.strip().lower() for a in actores.split(',')]
 
 #creamos la llave para los datos
     def get_titulo(self):
@@ -26,6 +34,10 @@ class Produccion:
         return self._director
     def get_actores(self):
         return self._actores
+    def get_genero(self):
+        return self._genero
+    def get_tipo(self):
+        return self._tipogra
 
 #le decimos como hacer el print
     def __repr__(self):
@@ -98,6 +110,94 @@ class ArbolCatalogo:
             self._postorder_recursivo(nodo.izquierda)
             self._postorder_recursivo(nodo.derecha)
             print(nodo.pelicula.get_titulo())
+            
+#Árbol AVL TP4
+
+class NodoAVL:
+    def __init__(self, pelicula):
+        self.pelicula = pelicula
+        self.izquierda = None
+        self.derecha = None
+        self.altura = 1 
+
+class ArbolAVL:
+    def __init__(self):
+        self.raiz = None
+
+    def insertar(self, pelicula):
+        self.raiz = self._insertar_recursivo(self.raiz, pelicula)
+
+    def _insertar_recursivo(self, nodo, nueva_pelicula):
+       
+        if not nodo:
+            return NodoAVL(nueva_pelicula)
+        
+        titulo_nuevo = nueva_pelicula.get_titulo().lower()
+        titulo_actual = nodo.pelicula.get_titulo().lower()
+        
+        if titulo_nuevo < titulo_actual:
+            nodo.izquierda = self._insertar_recursivo(nodo.izquierda, nueva_pelicula)
+        else:
+            nodo.derecha = self._insertar_recursivo(nodo.derecha, nueva_pelicula)
+
+        nodo.altura = 1 + max(self._obtener_altura(nodo.izquierda), self._obtener_altura(nodo.derecha))
+
+        balance = self._obtener_balance(nodo)
+
+  
+        if balance > 1 and titulo_nuevo < nodo.izquierda.pelicula.get_titulo().lower():
+            return self._rotacion_derecha(nodo)
+
+  
+        if balance < -1 and titulo_nuevo >= nodo.derecha.pelicula.get_titulo().lower():
+            return self._rotacion_izquierda(nodo)
+
+   
+        if balance > 1 and titulo_nuevo >= nodo.izquierda.pelicula.get_titulo().lower():
+            nodo.izquierda = self._rotacion_izquierda(nodo.izquierda)
+            return self._rotacion_derecha(nodo)
+
+
+        if balance < -1 and titulo_nuevo < nodo.derecha.pelicula.get_titulo().lower():
+            nodo.derecha = self._rotacion_derecha(nodo.derecha)
+            return self._rotacion_izquierda(nodo)
+
+        return nodo
+
+    def _obtener_altura(self, nodo):
+        if not nodo: return 0
+        return nodo.altura
+
+    def _obtener_balance(self, nodo):
+        if not nodo: return 0
+        return self._obtener_altura(nodo.izquierda) - self._obtener_altura(nodo.derecha)
+
+    def _rotacion_derecha(self, z):
+        y = z.izquierda
+        T3 = y.derecha
+        y.derecha = z
+        z.izquierda = T3
+        z.altura = 1 + max(self._obtener_altura(z.izquierda), self._obtener_altura(z.derecha))
+        y.altura = 1 + max(self._obtener_altura(y.izquierda), self._obtener_altura(y.derecha))
+        return y
+
+    def _rotacion_izquierda(self, z):
+        y = z.derecha
+        T2 = y.izquierda
+        y.izquierda = z
+        z.derecha = T2
+        z.altura = 1 + max(self._obtener_altura(z.izquierda), self._obtener_altura(z.derecha))
+        y.altura = 1 + max(self._obtener_altura(y.izquierda), self._obtener_altura(y.derecha))
+        return y
+
+    def recorrido_inorder(self):
+        self._inorder_recursivo(self.raiz)
+
+    def _inorder_recursivo(self, nodo):
+        if nodo is not None:
+            self._inorder_recursivo(nodo.izquierda)
+            print(nodo.pelicula)
+            self._inorder_recursivo(nodo.derecha)            
 
 
 #buscamos peliculas en el catalogo
@@ -161,14 +261,13 @@ def filtrar_peli(catalogo, termino):
         print(f"\n No se encontraron coincidencias para '{termino}'.")
 
         
-# ==========================================
-# NUEVA FUNCIÓN DE RECOMENDACIÓN todavía no esta terminada
-# ==========================================
+# funcion de recomendación en beta
+
 def recomendar_peli(catalogo):
     print("\n--- RECOMENDACIÓN DE PELÍCULAS ---")
     termino = input("¿En qué película basamos tu recomendación?: ")
     
-    # 1. Buscar coincidencias parciales (similar a buscar_peli)
+   
     encontrados = [p for p in catalogo if termino.lower() in p.get_titulo().lower()]
     
     if encontrados:
@@ -176,12 +275,193 @@ def recomendar_peli(catalogo):
         for i, peli in enumerate(encontrados, start=1):
             print(f"{i}. {peli.get_titulo()} ({peli.get_fecha_estreno()[:4]})")
         
-        # Acá luego agregaremos la lógica para que el usuario elija un número 
-        # y el algoritmo busque películas similares.
-        print("\n[Lógica de recomendación todavia en proceso]")
+     
+        try:
+            seleccion = int(input("\nIngresá el número de la película exacta (o 0 para cancelar): "))
+            
+            if seleccion == 0:
+                return 
+                
+            if 1 <= seleccion <= len(encontrados):
+                pelicula_base = encontrados[seleccion - 1]
+                print(f"\n🎬 Analizando '{pelicula_base.get_titulo()}'...")
+                print("Generando recomendaciones... (Esto puede tardar un segundo)")
+                
+                
+                generar_recomendaciones(catalogo, pelicula_base)
+                
+            else:
+                print("\n❌ Número fuera de rango.")
+        except ValueError:
+            print("\n❌ Entrada inválida. Debés ingresar un número.")
     else:
         print("\n❌ No se encontraron películas con ese título para basar la recomendación.")
 
+def generar_recomendaciones(catalogo, pelicula_base):
+    recomendaciones = []
+    
+    
+    director_base = pelicula_base.get_director()
+    actores_base = set(pelicula_base.get_actores())
+    generos_base = set(pelicula_base.get_genero())
+    
+    for peli in catalogo:
+      
+        if peli.get_titulo().lower() == pelicula_base.get_titulo().lower():
+            continue
+            
+        puntaje_similitud = 0
+        
+
+        if peli.get_director() == director_base and director_base != "":
+            puntaje_similitud += 30
+            
+    
+        actores_peli = set(peli.get_actores())
+        actores_comun = actores_base.intersection(actores_peli)
+        puntaje_similitud += len(actores_comun) * 15
+        
+  
+        generos_peli = set(peli.get_genero())
+        generos_comun = generos_base.intersection(generos_peli)
+        puntaje_similitud += len(generos_comun) * 10
+        
+
+        if puntaje_similitud > 0:
+            try:
+                calificacion = float(peli.get_puntaje())
+                puntaje_similitud += (calificacion * 3)
+            except ValueError:
+                pass 
+                
+   
+        if puntaje_similitud > 0:
+            recomendaciones.append((puntaje_similitud, peli))
+            
+   
+    recomendaciones.sort(key=lambda x: x[0], reverse=True)
+    
+  
+    print("\n🏆 TOP 10 RECOMENDACIONES:")
+    if not recomendaciones:
+        print("❌ No encontramos películas lo suficientemente similares en el catálogo.")
+    else:
+        for i, (pts, peli) in enumerate(recomendaciones[:10], start=1):
+            titulo = peli.get_titulo()
+            anio = peli.get_fecha_estreno()[:4]
+            estrellas = peli.get_puntaje()
+
+            print(f"{i}. {titulo} ({anio}) | ⭐ {estrellas} | ⚡ Score: {pts:.1f} pts")
+
+# Consigna enfermar el árbol tp4
+
+def calcular_altura(nodo):
+    if nodo is None: return 0
+    return 1 + max(calcular_altura(nodo.izquierda), calcular_altura(nodo.derecha))
+
+def experimento_desbalance(catalogo):
+    sys.setrecursionlimit(5000) 
+    
+    print("\n--- ⚠️ EXPERIMENTO TP4: BST SANO VS ENFERMO ---")
+    print("1. Listar catálogo con Árbol Sano (Datos originales)")
+    print("2. Listar catálogo con Árbol Enfermo (Datos ya ordenados A-Z)")
+    
+    opc = input("\nElegí una opción (1-2): ")
+    muestra = catalogo[:800] 
+    
+    if opc == "1":
+        print("\n🌲 Construyendo Árbol SANO (datos mezclados)...")
+        datos_insertar = muestra
+        
+        arbol_sano = ArbolCatalogo()
+        
+        inicio_tiempo = time.time()
+        for peli in datos_insertar:
+            arbol_sano.insertar(peli)
+        fin_tiempo = time.time()
+        tiempo_sano = fin_tiempo - inicio_tiempo
+        
+        altura_sano = calcular_altura(arbol_sano.raiz)
+        altura_ideal = math.ceil(math.log2(len(datos_insertar)))
+        
+        print("\n--- LISTADO DE PELÍCULAS (ÁRBOL SANO) ---")
+        arbol_sano.recorrido_inorder()
+        
+        print("\n" + "="*50)
+        print("📊 DIAGNÓSTICO DEL ÁRBOL SANO")
+        print("="*50)
+        print(f"Muestra procesada:     {len(datos_insertar)} películas")
+        print(f"Altura ideal O(log n): {altura_ideal} pisos")
+        print(f"Altura REAL:           {altura_sano} pisos")
+        print(f"Tiempo de armado:      {tiempo_sano:.5f} segundos")
+        print("="*50)
+        print("✅ DIAGNÓSTICO: Al ingresar datos desordenados, el árbol se balancea naturalmente.")
+        print("Para ver cómo este mismo árbol colapsa, volvé a entrar y elegí la opción 2.")
+        
+    elif opc == "2":
+        print("\n🥀 Construyendo Árbol ENFERMO (datos ordenados A-Z)...")
+        datos_insertar = sorted(muestra, key=lambda x: x.get_titulo().lower())
+        
+        arbol_enfermo = ArbolCatalogo()
+        
+        inicio_tiempo = time.time()
+        for peli in datos_insertar:
+            arbol_enfermo.insertar(peli)
+        fin_tiempo = time.time()
+        tiempo_enf = fin_tiempo - inicio_tiempo
+        
+        altura_enf = calcular_altura(arbol_enfermo.raiz)
+        altura_ideal = math.ceil(math.log2(len(datos_insertar)))
+        
+        print("\n--- LISTADO DE PELÍCULAS (ÁRBOL ENFERMO) ---")
+        arbol_enfermo.recorrido_inorder()
+        
+        print("\n" + "="*50)
+        print("📊 DIAGNÓSTICO DEL ÁRBOL ENFERMO")
+        print("="*50)
+        print(f"Altura ideal O(log n): {altura_ideal} pisos")
+        print(f"Altura REAL (O(n)):    {altura_enf} pisos")
+        print(f"Tiempo de armado:      {tiempo_enf:.5f} segundos")
+        print("="*50)
+        
+        print("\nEl árbol colapsó. ¿Qué hacemos ahora?")
+        print("1. Listar datos con Árbol AVL y comparar")
+        print("2. Volver al menú principal")
+        
+        opc_avl = input("Elegí una opción (1-2): ")
+        
+        if opc_avl == "1":
+            print("\n✨ Construyendo Árbol AVL (curando los datos sobre la marcha)...")
+            arbol_avl = ArbolAVL()
+            
+            inicio_avl = time.time()
+            for peli in datos_insertar:
+                arbol_avl.insertar(peli)
+            fin_avl = time.time()
+            tiempo_avl = fin_avl - inicio_avl
+            
+            altura_avl = arbol_avl._obtener_altura(arbol_avl.raiz)
+            
+            print("\n--- LISTADO DE PELÍCULAS (ÁRBOL AVL) ---")
+            arbol_avl.recorrido_inorder()
+            
+            print("\n" + "="*65)
+            print("🏆 COMPARACIÓN DEFINITIVA: BST ENFERMO vs AVL SANO")
+            print("="*65)
+            print(f"Muestra procesada: {len(datos_insertar)} películas ya ordenadas")
+            print("-" * 65)
+            print(f"{'MÉTRICA':<15} | {'BST TRADICIONAL (ENFERMO)':<25} | {'ÁRBOL AVL (CURADO)'}")
+            print("-" * 65)
+            print(f"{'Altura (pisos)':<15} | {altura_enf:<25} | {altura_avl}")
+            print(f"{'Tiempo (seg)':<15} | {tiempo_enf:<25.5f} | {tiempo_avl:.5f}")
+            print("="*65)
+            
+            if altura_avl <= altura_ideal + 1:
+                print("✅ ÉXITO: El AVL aplicó sus rotaciones y recuperó la eficiencia O(log n).")
+            print("="*65)
+            
+    else:
+        print("\n❌ Opción no válida.")
 
 def iniciar_menu(catalogo):
     while True:
@@ -194,8 +474,9 @@ def iniciar_menu(catalogo):
         print("3. Buscar película por título")
         print("4. Filtrar")
         print("5. Salir")
+        print("6. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
         
-        opcion = input("\nElegí una opción (1-5): ")
+        opcion = input("\nElegí una opción (1-6): ")
         
         if opcion == "1":
             recomendar_peli(catalogo)
@@ -220,9 +501,14 @@ def iniciar_menu(catalogo):
         elif opcion == "5":
             print("\n¡Gracias por usar CinefilApp! Saliendo...")
             break
+            
+        elif opcion == "6":
+           
+            experimento_desbalance(catalogo)
 
         else:
-            print("\n❌ Opción no válida. Ingresá un número del 1 al 5.")
-#Iniciamos el menu
+            print("\n❌ Opción no válida. Ingresá un número del 1 al 6.")
+
+
 if __name__ == "__main__":
     iniciar_menu(mi_catalogo)
