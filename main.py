@@ -37,7 +37,7 @@ class Produccion:
     def get_genero(self):
         return self._genero
     def get_tipo(self):
-        return self._tipogra
+        return self._tipo
 
 #le decimos como hacer el print
     def __repr__(self):
@@ -55,12 +55,14 @@ with open('catalogo.csv', encoding='utf-8') as archivo:
             nueva_prod = Produccion(fila[0], fila[1], fila[2], fila[3], fila[4], fila[5], fila[6], fila[7])
             mi_catalogo.append(nueva_prod)
 
+#creamos los nodos
 class Nodo:
     def __init__(self, pelicula):
         self.pelicula = pelicula
         self.izquierda = None
         self.derecha = None
 
+#creamos el arbol del catalogo
 class ArbolCatalogo:
     def __init__(self):
         self.raiz = None
@@ -110,9 +112,172 @@ class ArbolCatalogo:
             self._postorder_recursivo(nodo.izquierda)
             self._postorder_recursivo(nodo.derecha)
             print(nodo.pelicula.get_titulo())
-            
-#Árbol AVL TP4
 
+#armamos el arbol general (n-arios)            
+#primero nodos
+class NodoGeneral:
+    def __init__(self, nombre, pelicula=None):
+        self.nombre = nombre          # Nombre de la categoría o subcategoría
+        self.pelicula = pelicula      
+        self.hijos = []               
+
+    def agregar_hijo(self, nodo_hijo):
+        self.hijos.append(nodo_hijo)
+
+    def __repr__(self):
+        if self.pelicula:
+            return f"🎬 {self.pelicula.get_titulo()}"
+        return f"📁 [{self.nombre}]"
+
+#clase arbolgeneral
+class ArbolGeneral:
+    def __init__(self, raiz_nombre="Películas"):
+        self.raiz = NodoGeneral(raiz_nombre)
+
+    def recorrido_preorden(self, nodo=None, nivel=0):
+        if nodo is None:
+            nodo = self.raiz
+        
+        # imprime la profundidad del arbol
+        print("  " * nivel + f"├── {nodo.nombre}" if nivel > 0 else f"🌲 {nodo.nombre}")
+        
+        if nodo.pelicula:
+            print("  " * (nivel + 1) + f"⭐ {nodo.pelicula}")
+            
+        for hijo in nodo.hijos:
+            self.recorrido_preorden(hijo, nivel + 1)
+
+    def buscar_en_arbol(self, nodo, termino):
+        resultados = []
+        if nodo is None:
+            return resultados
+        
+        termino_lower = termino.lower()
+        
+        #Coincidencias con categoria o subcategoria
+        if termino_lower in nodo.nombre.lower():
+            resultados.append(nodo)
+            self._obtener_todos_los_descendientes(nodo, resultados)
+            
+        #Coincidencias con los titulos
+        elif nodo.pelicula and termino_lower in nodo.pelicula.get_titulo().lower():
+            resultados.append(nodo)
+            
+        #Busqueda recursiva
+        for hijo in nodo.hijos:
+            sub_res = self.buscar_en_arbol(hijo, termino)
+            for r in sub_res:
+                if r not in resultados:
+                    resultados.append(r)
+                    
+        return resultados
+
+    def _obtener_todos_los_descendientes(self, nodo, lista_resultados):
+        for hijo in nodo.hijos:
+            if hijo not in lista_resultados:
+                lista_resultados.append(hijo)
+            self._obtener_todos_los_descendientes(hijo, lista_resultados)
+
+#para que se construya con la base de datos
+def construir_arbol_categorias(catalogo):
+    arbol = ArbolGeneral("Películas")
+    
+    #categorias principales y subcategorias
+    estructura = {
+        "Ciencia ficción": {
+            "Cyberpunk": ["cyberpunk"],
+            "Viajes temporales": ["viajes temporales", "tiempo", "time travel"],
+            "Inteligencia artificial": ["inteligencia artificial", "ia", "robot", "androide"],
+            "Otros Sci-Fi": []
+        },
+        "Acción": {
+            "Aventura": ["aventura", "adventure", "survival"],
+            "Guerra": ["guerra", "war", "militar"],
+            "Acción General": ["accion", "action"],
+            "Otros Acción": []
+        },
+        "Comedia": {
+            "Humor": ["humor", "stand-up"],
+            "Comedia General": ["comedia", "comedy"],
+            "Otros Comedia": []
+        },
+        "Drama": {
+            "Romance": ["romance", "amor"],
+            "Biografía": ["biografia", "biography", "historico"],
+            "Drama General": ["drama"],
+            "Otros Drama": []
+        }
+    }
+    
+    #nodos principales y subnodos
+    nodos_macros = {}
+    nodos_subs = {}
+    titulos_agregados = set()
+
+    #construimos las macrocategorias y sus subcategorias
+    for macro, subs in estructura.items():
+        nodo_macro = NodoGeneral(macro)
+        arbol.raiz.agregar_hijo(nodo_macro)
+        nodos_macros[macro] = nodo_macro
+        nodos_subs[macro] = {}
+        
+        for sub in subs.keys():
+            nodo_sub = NodoGeneral(sub)
+            nodo_macro.agregar_hijo(nodo_sub)
+            nodos_subs[macro][sub] = nodo_sub
+
+    nodo_otros = NodoGeneral("Otros")
+    arbol.raiz.agregar_hijo(nodo_otros)
+    nodo_otros_gen = NodoGeneral("General")
+    nodo_otros.agregar_hijo(nodo_otros_gen)
+
+    #clasificamos las peliculas en su subcategoria correspondiente
+    for peli in catalogo:
+        generos_peli = peli.get_genero()
+        titulo_peli = peli.get_titulo().lower()
+        
+        if titulo_peli in titulos_agregados:
+            continue
+            
+        colocada = False
+
+        for macro, subs in estructura.items():
+            if colocada: 
+                break
+            for sub, keywords in subs.items():
+                if "Otros" in sub:
+                    continue
+                if any(any(kw in g for kw in keywords) for g in generos_peli):
+                    nodo_peli = NodoGeneral(peli.get_titulo(), pelicula=peli)
+                    nodos_subs[macro][sub].agregar_hijo(nodo_peli)
+                    titulos_agregados.add(titulo_peli)
+                    colocada = True
+                    break
+        
+        #si no encaja lo mandamos a "otros"
+        if not colocada:
+            macro_colocada = False
+            for macro, subs in estructura.items():
+                if any(macro.lower() in g for g in generos_peli):
+                    fallback_sub = [s for s in subs.keys() if "Otros" in s][0]
+                    if titulo_peli not in titulos_agregados:
+                        nodo_peli = NodoGeneral(peli.get_titulo(), pelicula=peli)
+                        nodos_subs[macro][fallback_sub].agregar_hijo(nodo_peli)
+                        titulos_agregados.add(titulo_peli)
+                    macro_colocada = True
+                    colocada = True
+                    break
+            
+            if not macro_colocada:
+                if titulo_peli not in titulos_agregados:
+                    nodo_peli = NodoGeneral(peli.get_titulo(), pelicula=peli)
+                    nodo_otros_gen.agregar_hijo(nodo_peli)
+                    titulos_agregados.add(titulo_peli)
+                        
+    return arbol
+
+
+#Árbol AVL TP4
 class NodoAVL:
     def __init__(self, pelicula):
         self.pelicula = pelicula
@@ -204,7 +369,6 @@ class ArbolAVL:
 #ACÁ ESTA LA ESTRATEGIA DE BUSQUEDA SECUENCIAL
 def buscar_peli(catalogo, termino):
     encontrados = [p for p in catalogo if termino.lower() in p.get_titulo().lower()]
-    #######lower es estetica, no sé si ponerlo########
 
     if encontrados:
         for peli in encontrados:
@@ -215,7 +379,7 @@ def buscar_peli(catalogo, termino):
 #filtramos peliculas en el catalogo
 def filtrar_peli(catalogo, termino):
     busqueda = termino.lower().strip()
-    #######lo mismo con strip, es estetica como lower#######
+
     encontrados = []
 
     #evaluamos la categorias si es un número para calificación o es una palabra
@@ -247,7 +411,6 @@ def filtrar_peli(catalogo, termino):
                 busqueda in p.get_puntaje().lower() or
                 busqueda in p.get_fecha_estreno().lower()):
                 coincide = True
-                ########devuelta lower#######
                 
         if coincide:
             encontrados.append(p)
@@ -466,17 +629,18 @@ def experimento_desbalance(catalogo):
 def iniciar_menu(catalogo):
     while True:
         print("\n====================")
-        print("    CINEFILAPP 🎬   ")
+        print("    CINEFILLAPP 🎬   ")
         print("====================")
         print("¿Todavía no decidiste qué mirar? Te ayudamos.\n")
         print("1. Recomendación por película")
         print("2. Listar todo el catálogo")
         print("3. Buscar película por título")
         print("4. Filtrar")
-        print("5. Salir")
-        print("6. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
+        print("5. Explorar categorías (Árbol n-ario)")
+        print("6. Salir")
+        print("7. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
         
-        opcion = input("\nElegí una opción (1-6): ")
+        opcion = input("\nElegí una opción (1-7): ")
         
         if opcion == "1":
             recomendar_peli(catalogo)
@@ -499,15 +663,74 @@ def iniciar_menu(catalogo):
             filtrar_peli(catalogo, termino)
             
         elif opcion == "5":
-            print("\n¡Gracias por usar CinefilApp! Saliendo...")
+            print("\n--- 🌲 EXPLORADOR INTERACTIVO DE CATEGORÍAS ---")
+            print("Construyendo jerarquía de categorías...")
+            arbol_universo = construir_arbol_categorias(catalogo)
+            
+            # Obtenemos las macrocategorías (los hijos directos de la raíz)
+            macro_categorias = arbol_universo.raiz.hijos
+            if not macro_categorias:
+                print("❌ No hay categorías disponibles.")
+                continue
+                
+            print("\n📁 Categorías principales:")
+            for i, macro in enumerate(macro_categorias, start=1):
+                print(f"{i}. {macro.nombre}")
+                
+            try:
+                opc_macro = int(input("\nIngresá el número de la categoría principal (o 0 para volver): "))
+                if opc_macro == 0:
+                    continue
+                
+                if 1 <= opc_macro <= len(macro_categorias):
+                    macro_seleccionada = macro_categorias[opc_macro - 1]
+                    
+                    # Obtenemos las subcategorías de la macrocategoría elegida
+                    sub_categorias = macro_seleccionada.hijos
+                    if not sub_categorias:
+                        print(f"\n❌ La categoría '{macro_seleccionada.nombre}' no tiene subcategorías.")
+                        continue
+                        
+                    print(f"\n📁 Subcategorías dentro de '{macro_seleccionada.nombre}':")
+                    for j, sub in enumerate(sub_categorias, start=1):
+                        print(f"{j}. {sub.nombre} ({len(sub.hijos)} elementos)")
+                        
+                    opc_sub = int(input("\nIngresá el número de la subcategoría (o 0 para volver): "))
+                    if opc_sub == 0:
+                        continue
+                        
+                    if 1 <= opc_sub <= len(sub_categorias):
+                        sub_seleccionada = sub_categorias[opc_sub - 1]
+                        
+                        # Filtramos los nodos que tengan películas asociadas
+                        peliculas_sub = [hijo for hijo in sub_seleccionada.hijos if hijo.pelicula is not None]
+                        
+                        print(f"\n🎬 Películas en [{macro_seleccionada.nombre} ➔ {sub_seleccionada.nombre}] ({len(peliculas_sub)}):")
+                        print("=" * 60)
+                        if peliculas_sub:
+                            for idx, nodo_peli in enumerate(peliculas_sub, start=1):
+                                print(f"{idx}. {nodo_peli.pelicula}")
+                        else:
+                            print("❌ No hay películas registradas en esta subcategoría.")
+                        print("=" * 60)
+                    else:
+                        print("\n❌ Número de subcategoría fuera de rango.")
+                else:
+                    print("\n❌ Número de categoría fuera de rango.")
+            except ValueError:
+                print("\n❌ Entrada inválida. Debés ingresar un número.")
+     
+        
+        elif opcion == "6":
+            print("\n¡Gracias por usar CinefillApp! Saliendo...")
             break
             
-        elif opcion == "6":
+        elif opcion == "7":
            
             experimento_desbalance(catalogo)
 
         else:
-            print("\n❌ Opción no válida. Ingresá un número del 1 al 6.")
+            print("\n❌ Opción no válida. Ingresá un número del 1 al 7.")
 
 
 if __name__ == "__main__":
