@@ -36,3 +36,9 @@ Editamos la función que ya teníamos de listar las peliculas para implementar e
 ENTREGA DE TRABAJO INTEGRADOR 04 EL ÁRBOL TAMBIEN PUEDE ENFERMARSE
 
 Agregamos una función nueva solamente para hacer el experimento utilizando nuestra función de listar todo el catalogo en la cual usábamos un Árbol como técnica. Primero podemos seleccionar listar un árbol tal cual esta ahora (sano) para ver cuantos pisos tiene y en que velocidad hace la tarea. Después podemos enfermar el árbol dándole datos ya ordenados (en el archivo main.py esta comentado esa parte del código) y nos devuelve la lista con los datos de pisos y velocidad nuevamente, después de ahí podemos usar el árbol avl y nos devuelve la comparación en velocidad y en pisos con el árbol enfermo. En conclusión el árbol una vez enfermo pierde velocidad ya que pasa a tener 800 pisos (uno por pelicula) y una vez cambiamos a una árbol avl vuelve a recuperar la velocidad y los pocos pisos que tenia como árbol sano.    
+
+Entrega de trabajo integrador 05 Organiza tu universo
+
+Se implemento el árbol general en una búsqueda de categorías y sub categorías por genero. Recorridos (Preorden), se agrego el recorrido en preorden (recorrido_preorden) que visita la gerarquia padre y despues baja a los hijio. Esto permite visualizar la jerarquía completa en la terminal con una estructura escalonada, como un sistema de carpetas.
+
+Búsquedas Recursivas: Se agrego un algoritmo (buscar_en_arbol) que busca un termimo especifico, como el nombre de un genero dentro de la jerarquía, devolviendo el nodo exacto y toda la rama de elementos que descienden de él.
