@@ -85,7 +85,7 @@ class ArbolCatalogo:
             else:
                 self._insertar_recursivo(nodo_actual.derecha, nueva_pelicula)
 
-    # --- RECORRIDOS OBLIGATORIOS tp3 (solo usamos inorder) ---
+    
     def recorrido_inorder(self):
         self._inorder_recursivo(self.raiz)
 
@@ -626,6 +626,132 @@ def experimento_desbalance(catalogo):
     else:
         print("\n❌ Opción no válida.")
 
+#Heap
+class ColaPrioridadHeap:
+    def __init__(self, capacidad=5): #top 5
+        self.capacidad = capacidad
+        self.heap = []             
+
+    def _calcular_prioridad(self, pelicula): #prioridad por calificación y más nueva
+       
+        try:
+            rating = float(pelicula.get_puntaje())
+        except ValueError:
+            rating = 0.0
+            
+        try:
+            anio = int(pelicula.get_fecha_estreno()[:4])
+        except (ValueError, IndexError):
+            anio = 2000   #si no se da año, se utiliza el 2000 como generico
+            
+        # Fórmula prioriza: 90% el puntaje + 10% por año
+        prioridad = (rating * 10.0) + (anio / 1000.0)
+        return prioridad
+
+    def insertar(self, pelicula):
+        prioridad = self._calcular_prioridad(pelicula)
+        elemento = (prioridad, pelicula)
+
+        if len(self.heap) < self.capacidad:
+            self.heap.append(elemento)
+            self._sift_up(len(self.heap) - 1)
+#si el heap está lleno, compara y quita
+        else:
+            if prioridad > self.heap[0][0]:
+                self.heap[0] = elemento
+                self._sift_down(0)
+
+    def _sift_up(self, indice):
+        padre = (indice - 1) // 2
+        if padre >= 0 and self.heap[indice][0] < self.heap[padre][0]:
+            self.heap[indice], self.heap[padre] = self.heap[padre], self.heap[indice]
+            self._sift_up(padre)
+
+    def _sift_down(self, indice):
+        menor = indice
+        izq = 2 * indice + 1
+        der = 2 * indice + 2
+
+        if izq < len(self.heap) and self.heap[izq][0] < self.heap[menor][0]:
+            menor = izq
+        if der < len(self.heap) and self.heap[der][0] < self.heap[menor][0]:
+            menor = der
+
+        if menor != indice:
+            self.heap[indice], self.heap[menor] = self.heap[menor], self.heap[indice]
+            self._sift_down(menor)
+
+    def obtener_ranking_ordenado(self):
+        elementos_copia = list(self.heap)
+        elementos_copia.sort(key=lambda x: x[0], reverse=True)
+        return elementos_copia
+
+def mostrar_top_peliculas(catalogo, n=5):
+    print(f"\nTOP {n} MEJORES PELÍCULAS")
+    
+    #Elegimos género o subgénero en el que buscar
+    termino = input("¿Qué género o subgénero buscás? \n(Dejar en blanco para todo el catálogo): ").strip().lower()
+    
+    #palabras claves de géneros o subgéneros
+    diccionario_subgeneros = {
+        "cyberpunk": ["cyberpunk"],
+        "viajes temporales": ["viajes temporales", "tiempo", "time travel"],
+        "inteligencia artificial": ["inteligencia artificial", "ia", "robot", "androide"],
+        "aventura": ["aventura", "adventure", "survival"],
+        "guerra": ["guerra", "war", "militar"],
+        "humor": ["humor", "stand-up"],
+        "comedia": ["comedia", "comedy"],
+        "romance": ["romance", "amor"],
+        "biografía": ["biografia", "biography", "historico"],
+        "drama": ["drama"]
+    }
+    
+    #nos fijamos en las palabras claves
+    if termino:
+        keywords_extras = diccionario_subgeneros.get(termino, [])
+        
+        catalogo_filtrado = []
+        for p in catalogo:
+            generos_peli = p.get_genero()
+
+            #Coincidencias género o subgénero
+            coincide_genero = any(termino in g for g in generos_peli)
+            coincide_subgenero = any(any(kw in g for kw in keywords_extras) for g in generos_peli)
+            
+            if coincide_genero or coincide_subgenero:
+                catalogo_filtrado.append(p)
+                
+        print(f"\n🔍 Filtrando por '{termino}': {len(catalogo_filtrado)} películas encontradas.")
+    else:
+        catalogo_filtrado = catalogo
+        print("\nAnalizando todo el catálogo completo...")
+        
+    #Si no se encuentra nada
+    if not catalogo_filtrado:
+        print(f"❌ No se encontraron películas asociadas a '{termino}'.")
+        return
+    
+    #proceso de armar el top
+    heap = ColaPrioridadHeap(capacidad=n)
+    for peli in catalogo_filtrado:
+        heap.insertar(peli)
+        
+    ranking = heap.obtener_ranking_ordenado()
+    
+    lista_puesto = ["1.", "2.", "3.", "4.", "5."]
+    
+    print("\n" + "=" * 65)
+    for i, (prio, peli) in enumerate(ranking):
+        puesto = lista_puesto[i] if i < len(lista_puesto) else f"{i+1}."
+        titulo = peli.get_titulo()
+        anio = peli.get_fecha_estreno()[:4]
+        rating = peli.get_puntaje()
+        
+        print(f"{puesto} {titulo:<22} ({anio}) | ⭐ Rating: {rating} | Score: {prio:.2f}")
+    print("=" * 65)
+
+
+
 def iniciar_menu(catalogo):
     while True:
         print("\n====================")
@@ -637,10 +763,11 @@ def iniciar_menu(catalogo):
         print("3. Buscar película por título")
         print("4. Filtrar")
         print("5. Explorar categorías (Árbol n-ario)")
-        print("6. Salir")
-        print("7. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
+        print("6. Ver TOP 5 (heap)")
+        print("7. Salir")
+        print("8. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
         
-        opcion = input("\nElegí una opción (1-7): ")
+        opcion = input("\nElegí una opción (1-8): ")
         
         if opcion == "1":
             recomendar_peli(catalogo)
@@ -663,7 +790,7 @@ def iniciar_menu(catalogo):
             filtrar_peli(catalogo, termino)
             
         elif opcion == "5":
-            print("\n--- 🌲 EXPLORADOR INTERACTIVO DE CATEGORÍAS ---")
+            print("\nEXPLORADOR INTERACTIVO DE CATEGORÍAS")
             print("Construyendo jerarquía de categorías...")
             arbol_universo = construir_arbol_categorias(catalogo)
             
@@ -720,12 +847,14 @@ def iniciar_menu(catalogo):
             except ValueError:
                 print("\n❌ Entrada inválida. Debés ingresar un número.")
      
-        
         elif opcion == "6":
+            mostrar_top_peliculas(catalogo, n=5)
+        
+        elif opcion == "7":
             print("\n¡Gracias por usar CinefillApp! Saliendo...")
             break
             
-        elif opcion == "7":
+        elif opcion == "8":
            
             experimento_desbalance(catalogo)
 
