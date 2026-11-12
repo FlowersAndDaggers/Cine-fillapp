@@ -3,6 +3,8 @@ import csv
 import sys
 import math
 import time
+import json
+import os
 
 #creamos la clase produccion
 class Produccion:
@@ -751,7 +753,132 @@ def mostrar_top_peliculas(catalogo, n=5):
     print("=" * 65)
 
 
+# ==========================================
+# GRAFOS (TP5) - Red de Películas
+# ==========================================
+class GrafoPeliculas:
+    def __init__(self):
+        # Lista de adyacencia: { "Titulo": { "Titulo_Vecino": peso, ... } }
+        self.adyacencia = {}
 
+    def agregar_vertice(self, titulo):
+        if titulo not in self.adyacencia:
+            self.adyacencia[titulo] = {}
+
+    def agregar_arista(self, titulo1, titulo2, peso):
+        # Grafo no dirigido
+        self.adyacencia[titulo1][titulo2] = peso
+        self.adyacencia[titulo2][titulo1] = peso
+
+    def obtener_vecinos(self, titulo):
+        return self.adyacencia.get(titulo, {})
+
+    def bfs_camino(self, inicio, objetivo):
+        """Busca el camino más corto (en saltos) entre dos películas"""
+        if inicio not in self.adyacencia or objetivo not in self.adyacencia:
+            return None
+
+        visitados = set([inicio])
+        cola = [[inicio]] # Guarda los caminos
+
+        while cola:
+            camino = cola.pop(0)
+            nodo_actual = camino[-1]
+
+            if nodo_actual == objetivo:
+                return camino
+
+            for vecino in self.adyacencia.get(nodo_actual, {}):
+                if vecino not in visitados:
+                    visitados.add(vecino)
+                    nuevo_camino = list(camino)
+                    nuevo_camino.append(vecino)
+                    cola.append(nuevo_camino)
+        return None
+
+def construir_red_peliculas(catalogo):
+    grafo = GrafoPeliculas()
+    
+    # 1. Pre-procesamos los datos para evitar cálculos repetitivos
+    print("   -> (Optimizando datos para la red...)")
+    datos_procesados = []
+    for p in catalogo:
+        titulo = p.get_titulo().lower()
+        grafo.agregar_vertice(titulo)
+        # Convertimos los actores a set UNA SOLA VEZ por película
+        datos_procesados.append({
+            "titulo": titulo,
+            "director": p.get_director(),
+            "actores": set(p.get_actores()) 
+        })
+        
+    # 2. Calculamos las conexiones cruzando los datos optimizados
+    total = len(datos_procesados)
+    print(f"   -> (Calculando conexiones entre {total} películas. Esto tomará unos segundos...)")
+    
+    for i in range(total):
+        # Mini reporte de progreso para saber que no está colgado
+        if i % 1000 == 0 and i > 0:
+            print(f"      ... {i} películas cruzadas ...")
+            
+        p1 = datos_procesados[i]
+        for j in range(i + 1, total):
+            p2 = datos_procesados[j]
+            
+            peso = 0
+            if p1["director"] == p2["director"] and p1["director"] != "":
+                peso += 10
+                
+            comunes = p1["actores"].intersection(p2["actores"])
+            if comunes:
+                peso += len(comunes) * 5
+            
+            if peso > 0:
+                grafo.agregar_arista(p1["titulo"], p2["titulo"], peso)
+                
+    return grafo
+
+def explorar_grafo(catalogo):
+    print("\n🕸️ INICIANDO RED DE PELÍCULAS (GRAFO)...")
+    
+    grafo = GrafoPeliculas()
+    archivo_grafo = "red_peliculas_cache.json"
+    
+    # Chequeamos si ya hicimos el cálculo pesado alguna vez
+    if os.path.exists(archivo_grafo):
+        print("⚡ Cargando red desde el archivo guardado (Carga instantánea)...")
+        with open(archivo_grafo, 'r', encoding='utf-8') as f:
+            grafo.adyacencia = json.load(f)
+    else:
+        print("⏳ Construyendo la red por primera vez (esto tomará unos minutos)...")
+        grafo = construir_red_peliculas(catalogo)
+        
+        print("💾 Guardando el mapa para la próxima vez...")
+        with open(archivo_grafo, 'w', encoding='utf-8') as f:
+            json.dump(grafo.adyacencia, f)
+            
+    print("\n--- MENÚ DEL GRAFO ---")
+    print("1. Ver conexiones directas de una película (Consulta TP)")
+    print("2. Volver al menú principal")
+    opc = input("Elegí una opción (1-2): ")
+    
+    if opc == "1":
+        termino = input("Ingresá el título de la película: ").strip().lower()
+        vecinos = grafo.obtener_vecinos(termino)
+        if vecinos:
+            print(f"\n🔗 Películas conectadas con '{termino.title()}':")
+            # Ordenamos para mostrar primero las conexiones más fuertes
+            vecinos_ordenados = sorted(vecinos.items(), key=lambda x: x[1], reverse=True)
+            for v, peso in vecinos_ordenados[:10]: 
+                print(f"   - {v.title()} (Fuerza de conexión: {peso})")
+        else:
+            print("❌ Película no encontrada o no tiene conexiones en este catálogo.")
+            
+    elif opc == "2":
+        return
+    else:
+        print("❌ Opción no válida.")
+            
 def iniciar_menu(catalogo):
     while True:
         print("\n====================")
@@ -766,8 +893,9 @@ def iniciar_menu(catalogo):
         print("6. Ver TOP 5 (heap)")
         print("7. Salir")
         print("8. ⚠️ EXPERIMENTO TP4: Enfermar al árbol")
+        print("9. 🕸️ Explorar Red de Películas (Grafos)") # <-- Agregá esto
         
-        opcion = input("\nElegí una opción (1-8): ")
+        opcion = input("\nElegí una opción (1-9): ")
         
         if opcion == "1":
             recomendar_peli(catalogo)
@@ -857,6 +985,9 @@ def iniciar_menu(catalogo):
         elif opcion == "8":
            
             experimento_desbalance(catalogo)
+            
+        elif opcion == "9":
+            explorar_grafo(catalogo)
 
         else:
             print("\n❌ Opción no válida. Ingresá un número del 1 al 7.")
