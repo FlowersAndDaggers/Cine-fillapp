@@ -43,8 +43,17 @@ Se implemento el árbol general en una búsqueda de categorías y sub categoría
 
 Búsquedas Recursivas: Se agrego un algoritmo (buscar_en_arbol) que busca un termimo especifico, como el nombre de un genero dentro de la jerarquía, devolviendo el nodo exacto y toda la rama de elementos que descienden de él.
 
+ENTREGA DE TRABAJO INTEGRADOR 06 Que el sistema elija primero:
+Se implementa un heap para obtener un top 5 de peliculas en general y según su género, ya que al tener una base datos tan extensa, generar un top con todas las peliculas cada vez que cambie algún factor, haría un uso excesivo de memoria o tardaría mucho el proceso. Por lo tanto un heap de 5 elemenos, establece los primeros 5 y luego compara con el resto dinamicamente por lo cuál recorre todos los elemenos pero no los enlista, solo enlista los 5 primeros, para luego comparar e ir agregando o quitando pero sin enlistar el total de películas. En este caso elegimos priorizar las calificaciones y la "frescura" de las películas. Esta "frescura" está dada por la fecha de estreno de las películas.
+
 ENTREGA DE TRABAJO INTEGRADOR 07 Conecta las cosas
 
 Agregamos los grafos donde los vértices son cada pelicula unica, y estan conectados por artistas (director o actor). 
 El tipo de grafo es no dirigido porque la relación es bidimensional y mutua, si una peli comparte actor con la otra la otra comparte con la primera también. Es pesado porque tiene un valor (fuerza) que se calcula sumando puntos por director o actor compartido.
 La representamos con una lista de adyacencia porque la densidad del grafo es baja solo comparte actores y directores. Si hubiéramos usando una matriz se desperdiciaría mucha memorias almacenando conexiones inexistentes. 
+
+ENTREGA DE TRABAJO INTEGRADOR 08 Explorá la red
+Agregamos a los grafos la busqueda en profundidad DFS y la busqueda en anchura BFS, ya que cada una nos permite responder diferentes preguntas.
+¿Qué tan relacionads están dos películas? Ahí es una búsqueda en anchura, que nos sirve para encontrar el cámino más corto en la red a partir de dos películas dada. Para ver que películas tengo que  ver para entender ambas películas por completo.
+¿Qué películas están relacionadas al universo cinématográfico? En este caso conviene una busqueda en profundidad en donde busca todas las películas relacionadas y las da en orden de prioridad del árbol.
+La complejidad en ambos casos depende de la forma del árbol, en donde dependen de los nodos y aristas.
