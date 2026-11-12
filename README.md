@@ -52,6 +52,10 @@ Agregamos los grafos donde los vértices son cada pelicula unica, y estan conect
 El tipo de grafo es no dirigido porque la relación es bidimensional y mutua, si una peli comparte actor con la otra la otra comparte con la primera también. Es pesado porque tiene un valor (fuerza) que se calcula sumando puntos por director o actor compartido.
 La representamos con una lista de adyacencia porque la densidad del grafo es baja solo comparte actores y directores. Si hubiéramos usando una matriz se desperdiciaría mucha memorias almacenando conexiones inexistentes. 
 
+Le adjunto el cache de las relaciones de las pelis ya que tarda mucho en procesar (15 minutos aprox) así que para ahorrarse eso peude bajar el archivo y ponerlo en la carpeta del codigo en git no me lo dejo subir por el peso.
+
+https://drive.google.com/drive/folders/1LAL6T3r43v5n-xFpfsu-AY9NqdtaZNbI?usp=drive_link
+
 ENTREGA DE TRABAJO INTEGRADOR 08 Explorá la red
 Agregamos a los grafos la busqueda en profundidad DFS y la busqueda en anchura BFS, ya que cada una nos permite responder diferentes preguntas.
 ¿Qué tan relacionads están dos películas? Ahí es una búsqueda en anchura, que nos sirve para encontrar el cámino más corto en la red a partir de dos películas dada. Para ver que películas tengo que  ver para entender ambas películas por completo.
