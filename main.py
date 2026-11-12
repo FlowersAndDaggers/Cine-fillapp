@@ -1,4 +1,3 @@
-#importamos el archivo csv
 import csv
 import sys
 import math
@@ -796,6 +795,31 @@ class GrafoPeliculas:
                     cola.append(nuevo_camino)
         return None
 
+    def dfs_explorar(self, inicio, limite=10):
+        #Explora la red en profundidad (DFS) desde una película inicial
+        
+        if inicio not in self.adyacencia:
+            return []
+        
+        visitados = set()
+        resultado = []
+        
+        def _dfs_recursivo(nodo):
+            if nodo in visitados or len(resultado) >= limite:
+                return
+            visitados.add(nodo)
+            resultado.append(nodo)
+            
+            #Ordenamos los vecinos
+            vecinos_ordenados = sorted(self.adyacencia.get(nodo, {}).items(), key=lambda x: x[1], reverse=True)
+            for vecino, _ in vecinos_ordenados:
+                if len(resultado) >= limite:
+                    break
+                _dfs_recursivo(vecino)
+                
+        _dfs_recursivo(inicio)
+        return resultado
+
 def construir_red_peliculas(catalogo):
     grafo = GrafoPeliculas()
     
@@ -838,6 +862,10 @@ def construir_red_peliculas(catalogo):
                 
     return grafo
 
+
+
+
+            
 def explorar_grafo(catalogo):
     print("\n🕸️ INICIANDO RED DE PELÍCULAS (GRAFO)...")
     
@@ -857,16 +885,18 @@ def explorar_grafo(catalogo):
         with open(archivo_grafo, 'w', encoding='utf-8') as f:
             json.dump(grafo.adyacencia, f)
             
-    print("\n--- MENÚ DEL GRAFO ---")
+    print("\n--- MENÚ DEL GRAFO y RECORRIDOS ---")
     print("1. Ver conexiones directas de una película (Consulta TP)")
-    print("2. Volver al menú principal")
-    opc = input("Elegí una opción (1-2): ")
+    print("2. Encontrar camino más corto entre dos películas (BFS)")
+    print("3. Explorar red en profundidad (DFS)")
+    print("4. Volver al menú principal")
+    opc = input("Elegí una opción (1-4): ")
     
     if opc == "1":
         termino = input("Ingresá el título de la película: ").strip().lower()
         vecinos = grafo.obtener_vecinos(termino)
         if vecinos:
-            print(f"\n🔗 Películas conectadas con '{termino.title()}':")
+            print(f"\n🔗 Películas conectadas directamente con '{termino.title()}':")
             # Ordenamos para mostrar primero las conexiones más fuertes
             vecinos_ordenados = sorted(vecinos.items(), key=lambda x: x[1], reverse=True)
             for v, peso in vecinos_ordenados[:10]: 
@@ -875,10 +905,34 @@ def explorar_grafo(catalogo):
             print("❌ Película no encontrada o no tiene conexiones en este catálogo.")
             
     elif opc == "2":
+        inicio = input("Película de origen: ").strip().lower()
+        objetivo = input("Película de destino: ").strip().lower()
+        camino = grafo.bfs_camino(inicio, objetivo)
+        if camino:
+            print(f"\n🚀 Camino más corto encontrado ({len(camino) - 1} saltos):")
+            for idx, p in enumerate(camino):
+                print(f"   {idx}. {p.title()}")
+        else:
+            print("❌ No se encontró un camino conectando ambas películas.")
+
+    elif opc == "3":
+        inicio = input("Película inicial para explorar en profundidad: ").strip().lower()
+        profundidad = grafo.dfs_explorar(inicio, limite=10)
+        if profundidad:
+            print(f"\n🌲 Exploración en profundidad (DFS) desde '{inicio.title()}':")
+            for idx, p in enumerate(profundidad, start=1):
+                print(f"   {idx}. {p.title()}")
+        else:
+            print("❌ Película no encontrada en la red.")
+    
+    elif opc == "4":
         return
     else:
         print("❌ Opción no válida.")
-            
+
+
+
+
 def iniciar_menu(catalogo):
     while True:
         print("\n====================")
@@ -990,8 +1044,9 @@ def iniciar_menu(catalogo):
             explorar_grafo(catalogo)
 
         else:
-            print("\n❌ Opción no válida. Ingresá un número del 1 al 7.")
+            print("\n❌ Opción no válida. Ingresá un número del 1 al 9.")
 
 
 if __name__ == "__main__":
     iniciar_menu(mi_catalogo)
+
