@@ -42,3 +42,9 @@ Entrega de trabajo integrador 05 Organiza tu universo
 Se implemento el árbol general en una búsqueda de categorías y sub categorías por genero. Recorridos (Preorden), se agrego el recorrido en preorden (recorrido_preorden) que visita la gerarquia padre y despues baja a los hijio. Esto permite visualizar la jerarquía completa en la terminal con una estructura escalonada, como un sistema de carpetas.
 
 Búsquedas Recursivas: Se agrego un algoritmo (buscar_en_arbol) que busca un termimo especifico, como el nombre de un genero dentro de la jerarquía, devolviendo el nodo exacto y toda la rama de elementos que descienden de él.
+
+ENTREGA DE TRABAJO INTEGRADOR 07 Conecta las cosas
+
+Agregamos los grafos donde los vértices son cada pelicula unica, y estan conectados por artistas (director o actor). 
+El tipo de grafo es no dirigido porque la relación es bidimensional y mutua, si una peli comparte actor con la otra la otra comparte con la primera también. Es pesado porque tiene un valor (fuerza) que se calcula sumando puntos por director o actor compartido.
+La representamos con una lista de adyacencia porque la densidad del grafo es baja solo comparte actores y directores. Si hubiéramos usando una matriz se desperdiciaría mucha memorias almacenando conexiones inexistentes. 
