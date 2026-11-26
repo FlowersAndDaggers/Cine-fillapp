@@ -44,7 +44,7 @@ class Produccion:
 
 #le decimos como hacer el print
     def __repr__(self):
-        return f"[{self._tipo}] {self._titulo} ({self._fecha_estreno[:4]}) dir. {self._director} - ⭐ {self._puntaje}"
+        return f"[{self._tipo}] {self._titulo} ({self._fecha_estreno[:4]}) dir. {self._director} - {self._puntaje}"
 
 #leemos el archivo csv
 mi_catalogo = []
@@ -88,7 +88,7 @@ class ArbolGeneral:
         print("  " * nivel + f"├── {nodo.nombre}" if nivel > 0 else f"🌲 {nodo.nombre}")
         
         if nodo.pelicula:
-            print("  " * (nivel + 1) + f"⭐ {nodo.pelicula}")
+            print("  " * (nivel + 1) + f" {nodo.pelicula}")
             
         for hijo in nodo.hijos:
             self.recorrido_preorden(hijo, nivel + 1)
@@ -429,7 +429,7 @@ def recomendar_peli(catalogo, grafo, watchlist, perfil):
             generar_recomendaciones_grupo(catalogo, peliculas_grupo, grafo, watchlist)
 
     elif modo == "3":
-        termino = input("\n💎 ¿Desde qué película querés explorar joyas ocultas?: ").strip()
+        termino = input("\n ¿Desde qué película querés explorar joyas ocultas?: ").strip()
         encontrados = [
             p for p in catalogo 
             if termino.lower() in p.get_titulo().lower() and p.get_titulo().lower() in grafo.adyacencia
@@ -515,9 +515,9 @@ def generar_recomendaciones(catalogo, pelicula_base, grafo, watchlist, perfil):
             coincidencias.append(f"Elenco: {acts_str}")
             
         detalle_comun = " | ".join(coincidencias) if coincidencias else "Sin datos detallados"
-        etiqueta_vista = f" [Ya vista - Tu nota: ⭐ {perfil.puntaje_usuario(titulo)} | Ideal para remirar]" if perfil.ya_vista(titulo) else ""
+        etiqueta_vista = f" [Ya vista - Tu nota:  {perfil.puntaje_usuario(titulo)} | Ideal para remirar]" if perfil.ya_vista(titulo) else ""
         
-        print(f"{i}. {titulo} ({anio}) | ⭐ {estrellas} | Afinidad: {peso_puro} pts{etiqueta_vista}")
+        print(f"{i}. {titulo} ({anio}) |  {estrellas} | Afinidad: {peso_puro} pts{etiqueta_vista}")
         print(f"   Comparten: {detalle_comun}")
     print("=" * 85)
 
@@ -623,7 +623,7 @@ def generar_recomendaciones_grupo(catalogo, peliculas_grupo, grafo, watchlist):
         detalle_comun = " | ".join(coincidencias) if coincidencias else "Conexión indirecta en red"
         etiqueta_puente = " [Puente Camino Mínimo]" if titulo.lower() in pelis_puente else ""
         
-        print(f"{i}. {titulo} ({anio}) | ⭐ {estrellas} |  Afinidad: {peso_puro} pts{etiqueta_puente}")
+        print(f"{i}. {titulo} ({anio}) |  {estrellas} |  Afinidad: {peso_puro} pts{etiqueta_puente}")
         print(f"   Comparten con el grupo: {detalle_comun}")
     print("=" * 85)
 
@@ -683,7 +683,7 @@ def generar_joyas_ocultas(catalogo, pelicula_base, grafo, watchlist):
         prof, camino = caminos_por_titulo[titulo.lower()]
         ruta_str = " ➔ ".join(t.title() for t in camino)
 
-        print(f"{i}. {titulo} ({anio}) | ⭐ {estrellas} | 🕳️ Profundidad DFS: {prof} saltos")
+        print(f"{i}. {titulo} ({anio}) |  {estrellas} |  Profundidad DFS: {prof} saltos")
         print(f"   Géneros: {generos}")
         print(f"   Cadena de conexión: {ruta_str}")
     print("=" * 85)
@@ -1006,7 +1006,7 @@ def mostrar_top_peliculas(catalogo, watchlist, n=10):
         rating = peli.get_puntaje()
         generos = ", ".join(peli.get_genero())
         
-        print(f"{i:2}. {titulo:<25} ({anio}) | ⭐ {rating} | 🎭 [{generos}] | Score: {prio:.2f}")
+        print(f"{i:2}. {titulo:<25} ({anio}) |  {rating} |  [{generos}] | Score: {prio:.2f}")
     print("=" * 75)
 
     #agregar a watchlist
@@ -1077,7 +1077,7 @@ class Watchlist:
         if perfil is not None:
             while True:
                 try:
-                    entrada = input(f"⭐ Puntuala del 1 al 10 para guardarla como YA VISTA en tu perfil (o '0' para omitir): ").strip()
+                    entrada = input(f" Puntuala del 1 al 10 para guardarla como YA VISTA en tu perfil (o '0' para omitir): ").strip()
                     if entrada == "0":
                         print(" No se registró puntaje en el perfil.")
                         break
@@ -1197,9 +1197,9 @@ class PerfilUsuario:
         self.vistas[clave] = puntaje
         self.guardar()
         if es_actualizacion:
-            print(f"🔄 Puntaje actualizado: '{pelicula.get_titulo()}' ➔ ⭐ {puntaje}/10")
+            print(f"🔄 Puntaje actualizado: '{pelicula.get_titulo()}' ➔  {puntaje}/10")
         else:
-            print(f"✅ Agregada a tu perfil ({self.nombre}): '{pelicula.get_titulo()}' ➔ ⭐ {puntaje}/10")
+            print(f"✅ Agregada a tu perfil ({self.nombre}): '{pelicula.get_titulo()}' ➔  {puntaje}/10")
 
     def eliminar_vista(self, titulo):
         clave = titulo.lower()
@@ -1223,7 +1223,7 @@ class PerfilUsuario:
         for i, (clave, pts) in enumerate(ordenado, start=1):
             peli = mapa.get(clave)
             if peli:
-                print(f"{i}. {peli.get_titulo()} ({peli.get_fecha_estreno()[:4]}) | Tu puntaje: ⭐ {pts}/10 | Catálogo: {peli.get_puntaje()}")
+                print(f"{i}. {peli.get_titulo()} ({peli.get_fecha_estreno()[:4]}) | Tu puntaje:  {pts}/10 | Catálogo: {peli.get_puntaje()}")
         print("=" * 70)
 
 
@@ -1249,7 +1249,7 @@ def gestionar_perfil(perfil, catalogo):
 
             print(f"\nResultados para '{termino}':")
             for i, p in enumerate(encontrados[:10], start=1):
-                marca = f" [Ya vista: ⭐ {perfil.puntaje_usuario(p.get_titulo())}]" if perfil.ya_vista(p.get_titulo()) else ""
+                marca = f" [Ya vista:  {perfil.puntaje_usuario(p.get_titulo())}]" if perfil.ya_vista(p.get_titulo()) else ""
                 print(f"{i}. {p.get_titulo()} ({p.get_fecha_estreno()[:4]}){marca}")
 
             try:
@@ -1329,7 +1329,7 @@ def tirar_los_dados(catalogo, perfil, grafo, watchlist):
         score_elegido, peli_elegida = random.choice(mejores_candidatas)
         print("\n ¡Los dados hablaron! Basado en tus gustos, te recomendamos:")
         print("=" * 75)
-        print(f" {peli_elegida.get_titulo()} ({peli_elegida.get_fecha_estreno()[:4]}) | ⭐ {peli_elegida.get_puntaje()}")
+        print(f" {peli_elegida.get_titulo()} ({peli_elegida.get_fecha_estreno()[:4]}) |  {peli_elegida.get_puntaje()}")
         print(f" Géneros: {', '.join(g.title() for g in peli_elegida.get_genero())}")
         print(f" Director: {peli_elegida.get_director().title()}")
         print(f" Elenco: {', '.join(a.title() for a in peli_elegida.get_actores())}")
@@ -1755,10 +1755,10 @@ def iniciar_menu(catalogo):
     print(f"✨ ¡Bienvenido/a, {mi_perfil.nombre}! ({len(mi_perfil.vistas)} películas vistas cargadas)")
     
     while True:
-        print("\n====================")
-        print("    CINEFILLAPP 🎬   ")
-        print("====================")
-        print("¿Todavía no decidiste qué mirar? Te ayudamos.\n")
+        print("\n ")
+        print("    -CINEFILLAPP-   ")
+        print(" ")
+        print("\n")
         print("1. ✨  Recomendación inteligente (Grafo + Heap + DFS)")
         print("2. 🎞️  Videoteca (Buscar y Explorar Categorías)")
         print("3. 🥇  Ver top 10 (Heap)")
@@ -1828,5 +1828,6 @@ def iniciar_menu(catalogo):
 #Inicio del menú
 if __name__ == "__main__":
     iniciar_menu(mi_catalogo)
+
 
 
